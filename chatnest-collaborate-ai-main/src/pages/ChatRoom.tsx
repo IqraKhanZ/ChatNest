@@ -17,6 +17,15 @@ type MessageType = {
 export default function ChatRoom() {
   const { roomId } = useParams<{ roomId: string }>();
   const { profile, session } = useSupabaseAuth();
+  useEffect(() => {
+  if (session?.access_token && session?.refresh_token) {
+    supabase.auth.setSession({
+      access_token: session.access_token,
+      refresh_token: session.refresh_token,
+    });
+  }
+}, [session]);
+
   const [room, setRoom] = useState<{ title: string; passkey: string } | null>(null);
   const [messages, setMessages] = useState<MessageType[]>([]);
   const [input, setInput] = useState("");
