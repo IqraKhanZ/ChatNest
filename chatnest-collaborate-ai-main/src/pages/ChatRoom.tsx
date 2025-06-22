@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,49 +28,71 @@ export default function ChatRoom() {
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
-      if (!session) return;
+      if (!session || !roomId) return;
 
-      // 1. Get room info
-      const { data: r } = await supabase
-        .from("chatrooms")
-        .select("title, passkey")
-        .eq("id", roomId)
-        .maybeSingle();
-      setRoom(r);
+      try {
+        // 1. Get room info
+        const { data: r } = await supabase
+          .from("chatrooms")
+          .select("title, passkey")
+          .eq("id", roomId)
+          .maybeSingle();
+        setRoom(r);
 
-      // 2. Fetch last 30 messages for this room
-      const { data: msgs } = await supabase
-        .from("messages")
-        .select("id, content, is_gpt, user_id, created_at")
-        .eq("chatroom_id", roomId)
-        .order("created_at", { ascending: true })
-        .limit(30);
+        // 2. Fetch last 50 messages for this room (increased from 30)
+        const { data: msgs, error: msgsError } = await supabase
+          .from("messages")
+          .select("id, content, is_gpt, user_id, created_at")
+          .eq("chatroom_id", roomId)
+          .order("created_at", { ascending: true })
+          .limit(50);
 
-      // 3. For each message, get author name
-      const authorMap: Record<string, string> = {};
-      if (msgs && msgs.length > 0) {
-        const userIds = [
-          ...new Set(msgs.filter((msg) => !msg.is_gpt).map((msg) => msg.user_id)),
-        ].filter(Boolean);
-        if (userIds.length > 0) {
-          const { data: profiles } = await supabase
-            .from("profiles")
-            .select("id, username")
-            .in("id", userIds);
-          (profiles || []).forEach((p) => {
-            authorMap[p.id] = p.username || "Anonymous";
+        if (msgsError) {
+          console.error("Error fetching messages:", msgsError);
+          toast({
+            title: "Error loading messages",
+            description: msgsError.message,
+            variant: "destructive"
           });
+          return;
         }
+
+        // 3. For each message, get author name
+        const authorMap: Record<string, string> = {};
+        if (msgs && msgs.length > 0) {
+          const userIds = [
+            ...new Set(msgs.filter((msg) => !msg.is_gpt && msg.user_id).map((msg) => msg.user_id)),
+          ].filter(Boolean);
+          
+          if (userIds.length > 0) {
+            const { data: profiles } = await supabase
+              .from("profiles")
+              .select("id, username")
+              .in("id", userIds);
+            (profiles || []).forEach((p) => {
+              authorMap[p.id] = p.username || "Anonymous";
+            });
+          }
+        }
+
+        setMessages(
+          (msgs || []).map((msg) => ({
+            id: msg.id,
+            author: msg.is_gpt ? "GPT-4" : authorMap[msg.user_id] || "Anonymous",
+            content: msg.content,
+            isGPT: !!msg.is_gpt,
+          }))
+        );
+      } catch (error) {
+        console.error("Error in fetchData:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load chat data",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
       }
-      setMessages(
-        (msgs || []).map((msg) => ({
-          id: msg.id,
-          author: msg.is_gpt ? "GPT-4" : authorMap[msg.user_id] || "Anonymous",
-          content: msg.content,
-          isGPT: !!msg.is_gpt,
-        }))
-      );
-      setLoading(false);
     }
     fetchData();
   }, [roomId, session]);
@@ -82,8 +103,11 @@ export default function ChatRoom() {
 
     console.log(`[ChatRoom] Setting up real-time subscription for room: ${roomId}`);
 
+    // Create a unique channel name to avoid conflicts
+    const channelName = `messages-${roomId}-${Date.now()}`;
+    
     const channel = supabase
-      .channel(`room:${roomId}`)
+      .channel(channelName)
       .on(
         'postgres_changes',
         { 
@@ -117,8 +141,7 @@ export default function ChatRoom() {
             isGPT: !!newMsg.is_gpt,
           };
 
-          // Only add the message if it's not already in our local state
-          // (to prevent duplicates when user sends their own message)
+          // Add the message if it's not already in our local state
           setMessages(prev => {
             const exists = prev.some(msg => msg.id === messageToAdd.id);
             if (exists) {
@@ -132,6 +155,16 @@ export default function ChatRoom() {
       )
       .subscribe((status) => {
         console.log('[ChatRoom] Real-time subscription status:', status);
+        if (status === 'SUBSCRIBED') {
+          console.log('[ChatRoom] Successfully subscribed to real-time updates');
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error('[ChatRoom] Real-time subscription error');
+          toast({
+            title: "Connection Error",
+            description: "Real-time updates may not work properly",
+            variant: "destructive"
+          });
+        }
       });
 
     // Cleanup subscription on unmount
@@ -150,49 +183,52 @@ export default function ChatRoom() {
 
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
-    if (!input.trim() || !profile?.id || !roomId) return;
+    if (!input.trim() || !profile?.id || !roomId || sending) return;
+    
+    const messageContent = input.trim();
     setSending(true);
+    setInput(""); // Clear input immediately for better UX
 
-    // 1. Insert user message in Supabase
-    const { data: userMsg, error: userError } = await supabase
-      .from("messages")
-      .insert({
-        content: input,
-        user_id: profile.id,
-        chatroom_id: roomId,
-        is_gpt: false,
-      })
-      .select("id, created_at")
-      .maybeSingle();
-
-    if (userError) {
-      toast({
-        title: "Failed to send message",
-        description: userError.message || "Could not save your message.",
-        variant: "destructive"
-      });
-      setSending(false);
-      return;
-    }
-
-    // Note: We don't manually add the message to state here anymore
-    // because the real-time subscription will handle it
-    setInput("");
-
-    // 2. Ask GPT (using ask-gpt function) and show reply
     try {
-      // Show a loader "AI is typing..." message
+      // 1. Insert user message in Supabase
+      const { data: userMsg, error: userError } = await supabase
+        .from("messages")
+        .insert({
+          content: messageContent,
+          user_id: profile.id,
+          chatroom_id: roomId,
+          is_gpt: false,
+        })
+        .select("id, created_at")
+        .maybeSingle();
+
+      if (userError) {
+        console.error("Error inserting user message:", userError);
+        toast({
+          title: "Failed to send message",
+          description: userError.message || "Could not save your message.",
+          variant: "destructive"
+        });
+        setInput(messageContent); // Restore input on error
+        setSending(false);
+        return;
+      }
+
+      console.log("User message inserted successfully:", userMsg);
+
+      // 2. Show AI typing indicator
+      const typingId = `${Date.now()}-gpt-loading`;
       setMessages(prev => [
         ...prev,
         {
-          id: `${Date.now()}-gpt-loading`,
+          id: typingId,
           author: "GPT-4",
           content: "🤖 AI is typing...",
           isGPT: true,
         },
       ]);
 
-      // Call edge function (backend endpoint)
+      // 3. Call GPT API
       const res = await fetch(
         "https://ecjxhtnpsvtkdiwlxext.supabase.co/functions/v1/ask-gpt",
         {
@@ -201,20 +237,23 @@ export default function ChatRoom() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${session.access_token}`,
           },
-          body: JSON.stringify({ message: input }),
+          body: JSON.stringify({ message: messageContent }),
         }
       );
 
-      // Remove loader message
-      setMessages(prev => prev.filter(msg => !msg.id.endsWith("-gpt-loading")));
+      // Remove typing indicator
+      setMessages(prev => prev.filter(msg => msg.id !== typingId));
 
       if (!res.ok) {
-        const errorData = await res.json();
+        const errorData = await res.json().catch(() => ({ error: "Unknown error" }));
+        console.error("GPT API error:", errorData);
         toast({
           title: "AI Error",
           description: errorData.error || "Failed to get reply from AI.",
           variant: "destructive"
         });
+        
+        // Show error message in chat
         setMessages(prev => [
           ...prev,
           {
@@ -229,8 +268,9 @@ export default function ChatRoom() {
       }
 
       const { reply } = await res.json();
+      console.log("GPT reply received:", reply);
 
-      // Insert GPT reply in database
+      // 4. Insert GPT reply in database
       const { data: gptMsg, error: gptError } = await supabase
         .from("messages")
         .insert({
@@ -243,22 +283,26 @@ export default function ChatRoom() {
         .maybeSingle();
 
       if (gptError) {
+        console.error("Error inserting GPT message:", gptError);
         toast({
           title: "Failed to store AI reply",
           description: gptError.message,
           variant: "destructive"
         });
+      } else {
+        console.log("GPT message inserted successfully:", gptMsg);
       }
 
-      // Note: We don't manually add the GPT message to state here anymore
-      // because the real-time subscription will handle it
     } catch (err: any) {
+      console.error("Error in handleSend:", err);
       setMessages(prev => prev.filter(msg => !msg.id.endsWith("-gpt-loading")));
       toast({
         title: "Server error",
         description: err.message || "Failed to connect to AI.",
         variant: "destructive"
       });
+      
+      // Show error message in chat
       setMessages((prev) => [
         ...prev,
         {
@@ -268,8 +312,10 @@ export default function ChatRoom() {
           isGPT: true,
         },
       ]);
+      setInput(messageContent); // Restore input on error
+    } finally {
+      setSending(false);
     }
-    setSending(false);
   }
 
   return (
