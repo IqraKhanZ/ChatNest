@@ -1,73 +1,20 @@
-# Welcome to your Lovable project
+# 💬 ChatNest — Collaborative AI Chatrooms
 
-## Project info
+ChatNest is a real-time collaborative chatroom platform where multiple authenticated users can join private rooms and interact directly with an AI (ChatGPT) together — just like editing a shared Google Doc, but for AI conversations. Users can create an account, log in, create or join chatrooms using passkeys, and chat with GPT collaboratively. Each chatroom is private, and only accessible to users who are invited. Messages appear in real-time, and each user sees only the chatrooms they are part of. The design uses a dark emerald green color scheme with gradient effects on the login page and a modern UI layout with white and amber accents.
 
-**URL**: https://lovable.dev/projects/bd6c66a8-05de-4614-8b5d-76e9934e61e2
+The app uses React and Tailwind CSS for the frontend, Supabase for backend services including authentication, real-time messaging, and data storage, and the OpenAI API to enable GPT-powered responses. Once a user logs in, they remain signed in until they manually log out via the profile section. The chatroom experience is seamless, with optimistic UI updates and real-time synchronization so that no user needs to refresh the page to see their own or others' messages.
 
-## How can I edit this code?
+## Tech Stack
 
-There are several ways of editing your application.
+- Frontend: React + Tailwind CSS
+- Backend: Supabase (PostgreSQL, Auth, Realtime, Edge Functions)
+- AI: OpenAI GPT API
+- Deployment: Can be hosted on Vercel, Netlify, or Supabase Hosting
 
-**Use Lovable**
+## How to Run Locally
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/bd6c66a8-05de-4614-8b5d-76e9934e61e2) and start prompting.
+1. Clone the repository:
+```bash
+git clone https://github.com/<your-username>/ChatNest.git
+cd ChatNest
 
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/bd6c66a8-05de-4614-8b5d-76e9934e61e2) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
