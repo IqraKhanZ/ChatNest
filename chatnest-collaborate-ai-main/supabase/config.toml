@@ -1,0 +1,4 @@
+project_id = "ecjxhtnpsvtkdiwlxext"
+
+[functions.ask-gpt]
+verify_jwt = true # this means only authenticated users can call the function

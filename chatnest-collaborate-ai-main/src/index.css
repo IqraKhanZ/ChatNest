@@ -1,0 +1,98 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Maroon theme: All colors are in the maroon palette as requested */
+
+@layer base {
+  :root {
+    --background: 17 40% 10%;                /* #2A0D11 */
+    --foreground: 350 39% 95%;               /* #F5E8E8 */
+
+    --card: 352 56% 10%;                     /* #1E080A */
+    --card-foreground: 350 39% 95%;          /* #F5E8E8 */
+
+    --popover: 352 56% 10%;                  /* #1E080A */
+    --popover-foreground: 350 39% 95%;       /* #F5E8E8 */
+
+    --primary: 350 32% 29%;                  /* #3E0F14 */
+    --primary-foreground: 350 39% 95%;       /* #F5E8E8 */
+
+    --secondary: 353 39% 38%;                /* #652024 */
+    --secondary-foreground: 350 39% 95%;     /* #F5E8E8 */
+
+    --muted: 350 39% 23%;                    /* #2A0D11 (reuse for muted) */
+    --muted-foreground: 350 39% 65%;         /* #C86B6B */
+
+    --accent: 352 43% 47%;                   /* #A04E58 (button/accent) */
+    --accent-foreground: 350 39% 95%;        /* #F5E8E8 */
+
+    --destructive: 351 48% 36%;              /* #89313A */
+    --destructive-foreground: 350 39% 95%;   /* #F5E8E8 */
+
+    --border: 353 39% 38%;                   /* #652024 */
+    --input: 353 39% 38%;                    /* #652024 */
+    --ring: 0 70% 80%;                       /* #F7B2B2 (soft pink ring) */
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 350 32% 29%;        /* #3E0F14 */
+    --sidebar-foreground: 350 39% 95%;        /* #F5E8E8 */
+    --sidebar-primary: 352 43% 47%;           /* #A04E58 */
+    --sidebar-primary-foreground: 350 39% 95%;/* #F5E8E8 */
+    --sidebar-accent: 357 42% 78%;            /* #F7B2B2 */
+    --sidebar-accent-foreground: 350 32% 29%; /* #3E0F14 */
+    --sidebar-border: 353 39% 38%;            /* #652024 */
+    --sidebar-ring: 353 57% 61%;              /* #C86B6B */
+  }
+
+  .dark {
+    --background: 17 40% 7%;                 /* #1E080A */
+    --foreground: 350 39% 95%;               /* #F5E8E8 */
+
+    --card: 17 40% 10%;                      /* #2A0D11 */
+    --card-foreground: 350 39% 95%;          /* #F5E8E8 */
+
+    --popover: 17 40% 10%;                   /* #2A0D11 */
+    --popover-foreground: 350 39% 95%;       /* #F5E8E8 */
+
+    --primary: 350 32% 29%;                  /* #3E0F14 */
+    --primary-foreground: 350 39% 95%;       /* #F5E8E8 */
+
+    --secondary: 353 39% 38%;                /* #652024 */
+    --secondary-foreground: 350 39% 95%;     /* #F5E8E8 */
+
+    --muted: 350 39% 18%;                    /* #1E080A */
+    --muted-foreground: 353 57% 61%;         /* #C86B6B */
+
+    --accent: 352 43% 47%;                   /* #A04E58 */
+    --accent-foreground: 350 39% 95%;        /* #F5E8E8 */
+
+    --destructive: 351 48% 36%;              /* #89313A */
+    --destructive-foreground: 350 39% 95%;   /* #F5E8E8 */
+
+    --border: 353 39% 38%;                   /* #652024 */
+    --input: 353 39% 38%;                    /* #652024 */
+    --ring: 357 42% 78%;                     /* #F7B2B2 */
+
+    --sidebar-background: 350 32% 29%;        /* #3E0F14 */
+    --sidebar-foreground: 350 39% 95%;        /* #F5E8E8 */
+    --sidebar-primary: 352 43% 47%;           /* #A04E58 */
+    --sidebar-primary-foreground: 350 39% 95%;/* #F5E8E8 */
+    --sidebar-accent: 357 42% 78%;            /* #F7B2B2 */
+    --sidebar-accent-foreground: 350 32% 29%; /* #3E0F14 */
+    --sidebar-border: 353 39% 38%;            /* #652024 */
+    --sidebar-ring: 353 57% 61%;              /* #C86B6B */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
