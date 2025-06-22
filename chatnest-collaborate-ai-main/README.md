@@ -11,10 +11,5 @@ The app uses React and Tailwind CSS for the frontend, Supabase for backend servi
 - AI: OpenAI GPT API
 - Deployment: Can be hosted on Vercel, Netlify, or Supabase Hosting
 
-## How to Run Locally
 
-1. Clone the repository:
-```bash
-git clone https://github.com/<your-username>/ChatNest.git
-cd ChatNest
 
